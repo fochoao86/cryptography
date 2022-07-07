@@ -1,60 +1,57 @@
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-# implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# This file is dual licensed under the terms of the Apache License, Version
+# 2.0, and the BSD License. See the LICENSE file in the root of this repository
+# for complete details.
 
-from __future__ import absolute_import, division, print_function
 
 import pytest
 
-from cryptography.hazmat.backends import _available_backends
-from cryptography.hazmat.backends.interfaces import (
-    CMACBackend, CipherBackend, DSABackend, EllipticCurveBackend, HMACBackend,
-    HashBackend, PBKDF2HMACBackend, PEMSerializationBackend,
-    PKCS8SerializationBackend, RSABackend,
-    TraditionalOpenSSLSerializationBackend
-)
-from .utils import check_backend_support, check_for_iface, select_backends
+from cryptography.hazmat.backends.openssl import backend as openssl_backend
+
+from .utils import check_backend_support
 
 
-def pytest_generate_tests(metafunc):
-    names = metafunc.config.getoption("--backend")
-    selected_backends = select_backends(names, _available_backends())
-
-    if "backend" in metafunc.fixturenames:
-        metafunc.parametrize("backend", selected_backends)
+def pytest_configure(config):
+    if config.getoption("--enable-fips"):
+        openssl_backend._enable_fips()
 
 
-@pytest.mark.trylast
-def pytest_runtest_setup(item):
-    check_for_iface("hmac", HMACBackend, item)
-    check_for_iface("cipher", CipherBackend, item)
-    check_for_iface("cmac", CMACBackend, item)
-    check_for_iface("hash", HashBackend, item)
-    check_for_iface("pbkdf2hmac", PBKDF2HMACBackend, item)
-    check_for_iface("dsa", DSABackend, item)
-    check_for_iface("rsa", RSABackend, item)
-    check_for_iface(
-        "traditional_openssl_serialization",
-        TraditionalOpenSSLSerializationBackend,
-        item
+def pytest_report_header(config):
+    return "\n".join(
+        [
+            "OpenSSL: {}".format(openssl_backend.openssl_version_text()),
+            "FIPS Enabled: {}".format(openssl_backend._fips_enabled),
+        ]
     )
-    check_for_iface("pkcs8_serialization", PKCS8SerializationBackend, item)
-    check_for_iface("elliptic", EllipticCurveBackend, item)
-    check_for_iface("pem_serialization", PEMSerializationBackend, item)
-    check_backend_support(item)
 
 
 def pytest_addoption(parser):
-    parser.addoption(
-        "--backend", action="store", metavar="NAME",
-        help="Only run tests matching the backend NAME."
-    )
+    parser.addoption("--wycheproof-root", default=None)
+    parser.addoption("--enable-fips", default=False)
+
+
+def pytest_runtest_setup(item):
+    if openssl_backend._fips_enabled:
+        for marker in item.iter_markers(name="skip_fips"):
+            pytest.skip(marker.kwargs["reason"])
+
+
+@pytest.fixture()
+def backend(request):
+    check_backend_support(openssl_backend, request)
+
+    # Ensure the error stack is clear before the test
+    errors = openssl_backend._consume_errors_with_text()
+    assert not errors
+    yield openssl_backend
+    # Ensure the error stack is clear after the test
+    errors = openssl_backend._consume_errors_with_text()
+    assert not errors
+
+
+@pytest.fixture
+def disable_rsa_checks(backend):
+    # Use this fixture to skip RSA key checks in tests that need the
+    # performance.
+    backend._rsa_skip_check_key = True
+    yield
+    backend._rsa_skip_check_key = False

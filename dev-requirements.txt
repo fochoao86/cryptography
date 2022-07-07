@@ -1,17 +1,5 @@
-coverage
-flake8
-flake8-import-order
-invoke
-iso8601
-pep8-naming
-pretend
-pyasn1
-pytest
-requests
-sphinx
-sphinx_rtd_theme
-sphinxcontrib-spelling
-tox
-twine
--e .
+click
+tox >= 2.4.1
+twine >= 1.8.0
+-e .[test,docs,docstest,pep8test]
 -e vectors

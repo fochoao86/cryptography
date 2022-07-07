@@ -1,17 +1,7 @@
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-# implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# This file is dual licensed under the terms of the Apache License, Version
+# 2.0, and the BSD License. See the LICENSE file in the root of this repository
+# for complete details.
 
-from __future__ import absolute_import, division, print_function
 
 import binascii
 import os
@@ -26,67 +16,71 @@ from ...utils import load_nist_vectors
 
 @pytest.mark.supported(
     only_if=lambda backend: backend.cipher_supported(
-        algorithms.Blowfish("\x00" * 56), modes.ECB()
+        algorithms._BlowfishInternal(b"\x00" * 56), modes.ECB()
     ),
     skip_message="Does not support Blowfish ECB",
 )
-@pytest.mark.cipher
-class TestBlowfishModeECB(object):
-    test_ECB = generate_encrypt_test(
+class TestBlowfishModeECB:
+    test_ecb = generate_encrypt_test(
         load_nist_vectors,
         os.path.join("ciphers", "Blowfish"),
         ["bf-ecb.txt"],
-        lambda key, **kwargs: algorithms.Blowfish(binascii.unhexlify(key)),
+        lambda key, **kwargs: algorithms._BlowfishInternal(
+            binascii.unhexlify(key)
+        ),
         lambda **kwargs: modes.ECB(),
     )
 
 
 @pytest.mark.supported(
     only_if=lambda backend: backend.cipher_supported(
-        algorithms.Blowfish("\x00" * 56), modes.CBC("\x00" * 8)
+        algorithms._BlowfishInternal(b"\x00" * 56), modes.CBC(b"\x00" * 8)
     ),
     skip_message="Does not support Blowfish CBC",
 )
-@pytest.mark.cipher
-class TestBlowfishModeCBC(object):
-    test_CBC = generate_encrypt_test(
+class TestBlowfishModeCBC:
+    test_cbc = generate_encrypt_test(
         load_nist_vectors,
         os.path.join("ciphers", "Blowfish"),
         ["bf-cbc.txt"],
-        lambda key, **kwargs: algorithms.Blowfish(binascii.unhexlify(key)),
+        lambda key, **kwargs: algorithms._BlowfishInternal(
+            binascii.unhexlify(key)
+        ),
         lambda iv, **kwargs: modes.CBC(binascii.unhexlify(iv)),
     )
 
 
 @pytest.mark.supported(
     only_if=lambda backend: backend.cipher_supported(
-        algorithms.Blowfish("\x00" * 56), modes.OFB("\x00" * 8)
+        algorithms._BlowfishInternal(b"\x00" * 56), modes.OFB(b"\x00" * 8)
     ),
     skip_message="Does not support Blowfish OFB",
 )
-@pytest.mark.cipher
-class TestBlowfishModeOFB(object):
-    test_OFB = generate_encrypt_test(
+class TestBlowfishModeOFB:
+    test_ofb = generate_encrypt_test(
         load_nist_vectors,
         os.path.join("ciphers", "Blowfish"),
         ["bf-ofb.txt"],
-        lambda key, **kwargs: algorithms.Blowfish(binascii.unhexlify(key)),
+        lambda key, **kwargs: algorithms._BlowfishInternal(
+            binascii.unhexlify(key)
+        ),
         lambda iv, **kwargs: modes.OFB(binascii.unhexlify(iv)),
     )
 
 
 @pytest.mark.supported(
     only_if=lambda backend: backend.cipher_supported(
-        algorithms.Blowfish("\x00" * 56), modes.CFB("\x00" * 8)
+        algorithms._BlowfishInternal(b"\x00" * 56), modes.CFB(b"\x00" * 8)
     ),
     skip_message="Does not support Blowfish CFB",
 )
-@pytest.mark.cipher
-class TestBlowfishModeCFB(object):
-    test_CFB = generate_encrypt_test(
+class TestBlowfishModeCFB:
+    test_cfb = generate_encrypt_test(
         load_nist_vectors,
         os.path.join("ciphers", "Blowfish"),
         ["bf-cfb.txt"],
-        lambda key, **kwargs: algorithms.Blowfish(binascii.unhexlify(key)),
+        lambda key, **kwargs: algorithms._BlowfishInternal(
+            binascii.unhexlify(key)
+        ),
         lambda iv, **kwargs: modes.CFB(binascii.unhexlify(iv)),
     )

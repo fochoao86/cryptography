@@ -1,6 +1,5 @@
 import binascii
 
-from cryptography.hazmat.backends.openssl.backend import backend
 from cryptography.hazmat.primitives.ciphers import algorithms, base, modes
 
 
@@ -8,7 +7,6 @@ def encrypt(mode, key, iv, plaintext):
     cipher = base.Cipher(
         algorithms.IDEA(binascii.unhexlify(key)),
         mode(binascii.unhexlify(iv)),
-        backend
     )
     encryptor = cipher.encryptor()
     ct = encryptor.update(binascii.unhexlify(plaintext))
@@ -29,8 +27,10 @@ def build_vectors(mode, filename):
         line = line.strip()
         if line.startswith("KEY"):
             if count != 0:
-                output.append("CIPHERTEXT = {0}".format(
-                    encrypt(mode, key, iv, plaintext))
+                output.append(
+                    "CIPHERTEXT = {0}".format(
+                        encrypt(mode, key, iv, plaintext)
+                    )
                 )
             output.append("\nCOUNT = {0}".format(count))
             count += 1
@@ -51,6 +51,7 @@ def build_vectors(mode, filename):
 def write_file(data, filename):
     with open(filename, "w") as f:
         f.write(data)
+
 
 CBC_PATH = "tests/hazmat/primitives/vectors/ciphers/AES/CBC/CBCMMT128.rsp"
 write_file(build_vectors(modes.CBC, CBC_PATH), "idea-cbc.txt")
