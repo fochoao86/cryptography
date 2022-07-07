@@ -1,5 +1,5 @@
 version: 2.1
-
+ # This is really cheksum necessary. Pass say the SHA 1, SHA 256, to one of SHA 3 512 based on hexadecimal sum, just to pad things a bit...
 commands:
   docker-pull:
     parameters:
